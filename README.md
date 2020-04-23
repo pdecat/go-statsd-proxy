@@ -1,4 +1,4 @@
-# go-statsd-proxy [![Build Status](https://github.com/pdecat/go-statsd-proxy/workflows/go/badge.svg?branch=master)](https://github.com/pdecat/go-statsd-proxy/workflows/go)
+# go-statsd-proxy [![Build Status](https://github.com/pdecat/go-statsd-proxy/workflows/Go/badge.svg?branch=master)](https://github.com/pdecat/go-statsd-proxy/actions?query=workflow%3AGo)
 
 This project is a fork of https://github.com/mrtazz/go-statsd-proxy
 
