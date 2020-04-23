@@ -1,12 +1,12 @@
 #
 # simple makefile to run and build things
 #
-PROJECT=github.com/mrtazz/go-statsd-proxy
+PROJECT=github.com/pdecat/go-statsd-proxy
 
 .phony: test benchmark format
 
 test:
-	@go test ${PROJECT}/statsdproxy
+	@go test -v ${PROJECT}/statsdproxy
 
 benchmark:
 	@echo "Running tests..."

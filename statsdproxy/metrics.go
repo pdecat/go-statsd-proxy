@@ -42,7 +42,7 @@ func StartManagementConsole(config ProxyConfig) error {
 		buf := make([]byte, RECV_BUF_LEN)
 		_, err = conn.Read(buf)
 		if err != nil {
-			log.Printf("Error reading:", err.Error())
+			log.Printf("Error reading: %s", err.Error())
 			return err
 		}
 		answers := answerManagementQuery(strings.Trim(string(buf), string(0)))

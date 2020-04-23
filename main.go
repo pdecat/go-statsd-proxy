@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mrtazz/go-statsd-proxy/statsdproxy"
+	"github.com/pdecat/go-statsd-proxy/statsdproxy"
 )
 
 var (

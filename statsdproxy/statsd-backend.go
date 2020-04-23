@@ -83,7 +83,7 @@ func (client *StatsDBackend) CheckAliveStatus() bool {
 
 	_, err = client.ManagementConn.Read(reply)
 	if err != nil {
-		log.Printf("Write to server failed:", err.Error())
+		log.Printf("Write to server failed: %s", err.Error())
 	}
 	health_status := strings.Trim(string(reply), string(0))
 

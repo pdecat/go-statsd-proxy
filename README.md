@@ -1,6 +1,6 @@
-# go-statsd-proxy [![Build Status](https://travis-ci.org/mrtazz/go-statsd-proxy.svg?branch=master)](https://travis-ci.org/mrtazz/go-statsd-proxy)
+# go-statsd-proxy [![Build Status](https://github.com/pdecat/go-statsd-proxy/workflows/go/badge.svg?branch=master)](https://github.com/pdecat/go-statsd-proxy/workflows/go)
 
-## This project is unmaintained. YMMV
+This project is a fork of https://github.com/mrtazz/go-statsd-proxy
 
 ## Overview
 A proxy for multiple statsd backends that routes metrics to specific instances
@@ -10,7 +10,7 @@ to learn Go.
 
 ## Usage
 ```
-git clone https://github.com/mrtazz/go-statsd-proxy
+git clone https://github.com/pdecat/go-statsd-proxy
 cd go-statsd-proxy
 go build
 ./go-statsd-proxy -f exampleConfig.json
@@ -61,7 +61,7 @@ total number of allocated objects: 309
 
 ## Bugs
 Probably a lot, submit them
-[here](https://github.com/mrtazz/go-statsd-proxy/issues).
+[here](https://github.com/pdecat/go-statsd-proxy/issues).
 
 There is also a debug mode included which probably makes a lot of noise
 depending on how many metrics you send. So be warned. It can be enabled by
@@ -69,7 +69,7 @@ running the proxy with the `-d` flag.
 
 ## Contributing
 Take a look at [the
-guidelines](https://github.com/mrtazz/go-statsd-proxy/blob/master/CONTRIBUTING.md).
+guidelines](https://github.com/pdecat/go-statsd-proxy/blob/master/CONTRIBUTING.md).
 
 
 [statsd-proxy]: https://github.com/etsy/statsd/blob/master/proxy.js
