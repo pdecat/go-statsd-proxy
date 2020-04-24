@@ -18,8 +18,9 @@ type StatsdConfigNode struct {
 type ProxyConfig struct {
 	Host           string             `json:host`
 	Port           int                `json:port`
-	ManagementPort int                `json:managementPort`
-	CheckInterval  int                `json:checkInterval`
+	ManagementHost string             `json:managementhost`
+	ManagementPort int                `json:managementport`
+	CheckInterval  int                `json:checkinterval`
 	Nodes          []StatsdConfigNode `json:nodes`
 	Mirror         bool               `json:mirror`
 }

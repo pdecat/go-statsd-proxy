@@ -24,9 +24,12 @@ type metricsRequest struct {
 
 // start the management console on all interface on the configured port
 func StartManagementConsole(config ProxyConfig) error {
-	log.Printf("Starting Management listener on %s and port %d", config.Host,
+	if config.ManagementHost == "" {
+		config.ManagementHost = "127.0.0.1"
+	}
+	log.Printf("Starting Management listener on %s and port %d", config.ManagementHost,
 		config.ManagementPort)
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d",
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.ManagementHost,
 		config.ManagementPort))
 	if err != nil {
 		log.Printf("error listening: %s", err.Error())
