@@ -1,0 +1,55 @@
+# This workflow will build a docker container, and publish it to a Google Container Registry
+#
+# To configure this workflow, set up the following secrets in your workspace:
+# - GCP_PROJECT with the name of the project,
+# - GCP_EMAIL with the service account email,
+# - GCP_KEY with the Base64 encoded JSON service account key (https://github.com/GoogleCloudPlatform/github-actions/tree/docs/service-account-key/setup-gcloud#inputs)
+# - REGISTRY_HOSTNAME with the target Google Cloud Registry (e.g. gcr.io or eu.gcr.io).
+
+name: Build and Push docker image to GCR
+
+on:
+  release:
+    types: [created]
+
+# Environment variables available to all jobs and steps in this workflow
+env:
+  GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+  GCP_EMAIL: ${{ secrets.GCP_EMAIL }}
+  GITHUB_SHA: ${{ github.sha }}
+  IMAGE: go-statsd-proxy
+  REGISTRY_HOSTNAME: ${{ secrets.REGISTRY_HOSTNAME }}
+
+jobs:
+  setup-build-publish:
+    name: Setup, Build and Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Setup gcloud CLI
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: "289.0.0"
+          service_account_email: ${{ secrets.GCP_EMAIL }}
+          service_account_key: ${{ secrets.GCP_KEY }}
+
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - name: Setup
+        run: |
+          gcloud auth configure-docker
+
+      # Build the Docker image
+      - name: Build
+        run: |
+          docker build \
+            -t "$REGISTRY_HOSTNAME"/"$GCP_PROJECT"/"$IMAGE":"$GITHUB_SHA" \
+            -t "$REGISTRY_HOSTNAME"/"$GCP_PROJECT"/"$IMAGE":"${GITHUB_REF/refs\/tags\/v/}" \
+            .
+
+      # Push the Docker image to Google Container Registry
+      - name: Publish
+        run: |
+          docker push $REGISTRY_HOSTNAME/$GCP_PROJECT/$IMAGE:$GITHUB_SHA
+          docker push $REGISTRY_HOSTNAME/$GCP_PROJECT/$IMAGE:${GITHUB_REF/refs\/tags\/v/}
