@@ -8,6 +8,10 @@ via consistent hashing. This is basically a reimplementation of the proxy
 [included in Etsy's StatsD][statsd-proxy] and serves as a side project for me
 to learn Go.
 
+Compared to the upstream project, this fork implements mirroring as an additional feature.
+When enabled, metrics will be forwarded to all registered backends.
+This can be useful during migration phases from one backend implementation to another.
+
 ## Usage
 ```
 git clone https://github.com/pdecat/go-statsd-proxy
