@@ -11,7 +11,7 @@ import (
 type StatsdConfigNode struct {
 	Host      string `json:host`
 	Port      int    `json:port`
-	Adminport int    `json:adminport`
+	AdminPort int    `json:adminport`
 }
 
 // struct to represent the whole JSON config file

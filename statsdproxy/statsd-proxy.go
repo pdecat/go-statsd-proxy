@@ -62,7 +62,7 @@ func StartMainListener(config ProxyConfig) error {
 	relay_channel := make(chan StatsDMetric, CHANNEL_SIZE)
 	hash_ring := *NewHashRing()
 	for _, node := range config.Nodes {
-		backend := NewStatsDBackend(node.Host, node.Port, node.Adminport,
+		backend := NewStatsDBackend(node.Host, node.Port, node.AdminPort,
 			config.CheckInterval)
 		if DebugMode {
 			log.Printf("Adding backend %s:%d", backend.Host, backend.Port)
