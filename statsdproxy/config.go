@@ -21,6 +21,7 @@ type ProxyConfig struct {
 	ManagementPort int                `json:managementPort`
 	CheckInterval  int                `json:checkInterval`
 	Nodes          []StatsdConfigNode `json:nodes`
+	Mirror         bool               `json:mirror`
 }
 
 // constructor function to create a new config struct with values

@@ -47,6 +47,7 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 				Port:           8125,
 				ManagementPort: 8135,
 				CheckInterval:  1000,
+				Mirror:         false,
 			},
 		},
 		{
@@ -61,7 +62,7 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 			"port": 8125,
 			"managementPort": 8135,
 			"checkInterval": 1000,
-			"cacheSize": 10000
+			"mirror": true
 			}
 			`,
 			&ProxyConfig{
@@ -86,6 +87,7 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 				Port:           8125,
 				ManagementPort: 8135,
 				CheckInterval:  1000,
+				Mirror:         true,
 			},
 		}}
 
