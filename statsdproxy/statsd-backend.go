@@ -46,6 +46,11 @@ func (client *StatsDBackend) Open() {
 
 // method to open TCP connection to the management port
 func (client *StatsDBackend) OpenManagementConnection() {
+	if client.ManagementPort == 0 {
+		log.Printf("no management port on backend %s, checks will be skipped", client.Host)
+		return
+	}
+
 	connectionString := fmt.Sprintf("%s:%d", client.Host, client.ManagementPort)
 	conn, err := net.Dial("tcp", connectionString)
 	if err != nil {
@@ -71,9 +76,16 @@ func (client *StatsDBackend) Send(data string) {
 }
 
 func (client *StatsDBackend) CheckAliveStatus() bool {
-	if DebugMode {
-		log.Printf("checking backend on %s:%d", client.Host, client.Port)
+	if client.ManagementConn == nil {
+		if DebugMode {
+			log.Printf("skipping backend check on %s", client.Host)
+		}
+		return true
 	}
+	if DebugMode {
+		log.Printf("Checking alive status on backend %s:%d (management port %d)", client.Host, client.Port, client.ManagementPort)
+	}
+
 	update_string := fmt.Sprintf("health")
 	_, err := fmt.Fprintf(client.ManagementConn, update_string)
 	if err != nil {
@@ -112,10 +124,6 @@ func (client *StatsDBackend) CheckAliveStatus() bool {
 func (client *StatsDBackend) Alive() bool {
 	now := time.Now().Unix()
 	if (now - client.Status.LastPingTime) > int64(healthCheckInterval) {
-		if DebugMode {
-			log.Printf("Checking alive status on backend %s:%d", client.Host,
-				client.ManagementPort)
-		}
 		client.Status.Alive = client.CheckAliveStatus()
 		client.Status.LastPingTime = now
 	}
