@@ -138,7 +138,7 @@ func parsePacketString(data string) *StatsDMetric {
 	metricType := third[0]
 
 	switch metricType {
-	case "c", "ms", "g":
+	case "c", "ms", "g", "h", "s":
 		ret.name = name
 		ret.value = value
 		ret.raw = data
