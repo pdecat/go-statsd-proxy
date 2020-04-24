@@ -14,9 +14,9 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 			`
 			{
 			"nodes": [
-				{"host": "127.0.0.1", "port": 8126, "adminport": 8136},
-				{"host": "127.0.0.1", "port": 8127, "adminport": 8137},
-				{"host": "127.0.0.1", "port": 8128, "adminport": 8138}
+				{"host": "127.0.0.1", "port": 8126, "managementport": 8136},
+				{"host": "127.0.0.1", "port": 8127, "managementport": 8137},
+				{"host": "127.0.0.1", "port": 8128, "managementport": 8138}
 			],
 			"host":  "0.0.0.0",
 			"port": 8125,
@@ -28,19 +28,19 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 			&ProxyConfig{
 				Nodes: []StatsdConfigNode{
 					{
-						Host:      "127.0.0.1",
-						Port:      8126,
-						AdminPort: 8136,
+						Host:           "127.0.0.1",
+						Port:           8126,
+						ManagementPort: 8136,
 					},
 					{
-						Host:      "127.0.0.1",
-						Port:      8127,
-						AdminPort: 8137,
+						Host:           "127.0.0.1",
+						Port:           8127,
+						ManagementPort: 8137,
 					},
 					{
-						Host:      "127.0.0.1",
-						Port:      8128,
-						AdminPort: 8138,
+						Host:           "127.0.0.1",
+						Port:           8128,
+						ManagementPort: 8138,
 					},
 				},
 				Host:           "0.0.0.0",
@@ -55,7 +55,7 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 			"nodes": [
 				{"host": "127.0.0.1", "port": 8126},
 				{"host": "127.0.0.1", "port": 8127},
-				{"host": "127.0.0.1", "port": 8128, "adminport": 8138}
+				{"host": "127.0.0.1", "port": 8128, "managementport": 8138}
 			],
 			"host":  "0.0.0.0",
 			"port": 8125,
@@ -67,19 +67,19 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 			&ProxyConfig{
 				Nodes: []StatsdConfigNode{
 					{
-						Host:      "127.0.0.1",
-						Port:      8126,
-						AdminPort: 0,
+						Host:           "127.0.0.1",
+						Port:           8126,
+						ManagementPort: 0,
 					},
 					{
-						Host:      "127.0.0.1",
-						Port:      8127,
-						AdminPort: 0,
+						Host:           "127.0.0.1",
+						Port:           8127,
+						ManagementPort: 0,
 					},
 					{
-						Host:      "127.0.0.1",
-						Port:      8128,
-						AdminPort: 8138,
+						Host:           "127.0.0.1",
+						Port:           8128,
+						ManagementPort: 8138,
 					},
 				},
 				Host:           "0.0.0.0",
@@ -107,9 +107,9 @@ func BenchmarkReadConfigFile(b *testing.B) {
 	const testConfig = `
     {
       "nodes": [
-        {"host": "127.0.0.1", "port": 8129, "adminport": 8126},
-        {"host": "127.0.0.1", "port": 8127, "adminport": 8128},
-        {"host": "127.0.0.1", "port": 8129, "adminport": 8130}
+        {"host": "127.0.0.1", "port": 8129, "managementport": 8126},
+        {"host": "127.0.0.1", "port": 8127, "managementport": 8128},
+        {"host": "127.0.0.1", "port": 8129, "managementport": 8130}
       ],
       "host":  "0.0.0.0",
       "port": 8125,

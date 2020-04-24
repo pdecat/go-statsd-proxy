@@ -9,9 +9,9 @@ import (
 
 // struct to represent a backend node in JSON
 type StatsdConfigNode struct {
-	Host      string `json:host`
-	Port      int    `json:port`
-	AdminPort int    `json:adminport`
+	Host           string `json:host`
+	Port           int    `json:port`
+	ManagementPort int    `json:managementport`
 }
 
 // struct to represent the whole JSON config file
