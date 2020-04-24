@@ -14,10 +14,57 @@ This can be useful during migration phases from one backend implementation to an
 
 ## Usage
 ```
-git clone https://github.com/pdecat/go-statsd-proxy
-cd go-statsd-proxy
-go build
-./go-statsd-proxy -f exampleConfig.json
+# git clone https://github.com/pdecat/go-statsd-proxy
+# cd go-statsd-proxy
+# go build
+# ./go-statsd-proxy -f exampleConfig.json
+```
+
+## Mirroring
+
+Mirroring mode is enabled by setting the `mirror` config parameter to true, e.g.:
+
+```
+{
+  "nodes": [
+    {
+      "host": "127.0.0.1",
+      "port": 8130
+    },
+    {
+      "host": "127.0.0.1",
+      "port": 8131
+    }
+  ],
+  "host": "0.0.0.0",
+  "port": 8125,
+  "managementport": 8126,
+  "checkInterval": 1000,
+  "mirror": true
+}
+```
+
+## Testing
+
+Start as many dummy socat backends as configured in other terminals, they will print the metrics they receive on standard output, e.g.:
+
+```
+# socat - udp4-listen:8130,fork
+```
+
+Send test metrics to the proxy using `socat`:
+
+```
+# echo -n "test:1|c|#from:me,to:proxy"| socat - udp-sendto:localhost:8125
+```
+
+## Docker
+
+Building and running as a docker container using the host network in debug mode with an `etc/statsdproxy.json` configuration file:
+
+```
+# docker build . -t go-statsd-proxy
+# docker run -v $(pwd)/etc:/etc --net=host go-statsd-proxy -d
 ```
 
 ## Monitoring
@@ -29,7 +76,7 @@ about the running process. By default the interface runs on port 8126.
 This can be used as a basic health check to see if the server is still
 responding. It's not really detailed or granular but may change in the future.
 ```
-% echo "ping" | nc -w1 localhost 8126                                                                                                                                                           <master ✗>
+# echo "ping" | nc -w1 localhost 8126
 pong
 ```
 
@@ -38,7 +85,7 @@ This command gives you an overview over some of the internal stats of the
 running proxy:
 
 ```
-% echo -n "stats" | nc -w1 127.0.01 8126
+# echo -n "stats" | nc -w1 127.0.01 8126
 time running in seconds: 51
 packets_received: 1.000000
 ```
@@ -48,7 +95,7 @@ This command fives you an overview over the most important memory stats. Use
 this to feed instance metrics into ganglia for example:
 
 ```
-% echo "memstats" | nc -w1 localhost 8126
+# echo "memstats" | nc -w1 localhost 8126
 bytes allocated and in use: 292432
 bytes allocated total: 363088
 bytes obtained from system: 4331752
