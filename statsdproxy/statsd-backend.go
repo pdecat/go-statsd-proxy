@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 	"time"
 )
@@ -24,8 +25,10 @@ type StatsDBackend struct {
 	}
 }
 
-func NewStatsDBackend(host string, port int,
-	managementPort int, check_interval int) *StatsDBackend {
+func NewStatsDBackend(host string, port int, managementPort int, check_interval int) *StatsDBackend {
+	if host == "" {
+		host, _ = os.Hostname()
+	}
 	healthCheckInterval = check_interval
 	client := StatsDBackend{Host: host, Port: port, ManagementPort: managementPort}
 	client.RingID, _ = GetHashRingPosition(fmt.Sprintf("%s:%d", host, port))

@@ -89,7 +89,8 @@ func TestReadConfigFile_BasicData(t *testing.T) {
 				CheckInterval:  1000,
 				Mirror:         true,
 			},
-		}}
+		},
+	}
 
 	for _, tc := range cases {
 		parsedConfig, err := readConfigFile([]byte(tc.Input))

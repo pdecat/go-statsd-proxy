@@ -4,6 +4,7 @@ package statsdproxy
 import (
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -50,6 +51,10 @@ func StartProxy(cfgFilePath string, quit chan bool) error {
 // StartMainListener sets up the main UDP listener. Everything that is needed to
 // receive and relay metrics
 func StartMainListener(config ProxyConfig) error {
+	if config.Host == "" {
+		config.Host, _ = os.Hostname()
+	}
+
 	log.Printf("Starting StatsD listener on %s and port %d", config.Host, config.Port)
 	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(config.Host), Port: config.Port})
 	if err != nil {
@@ -60,8 +65,11 @@ func StartMainListener(config ProxyConfig) error {
 	relayChannel := make(chan StatsDMetric, CHANNEL_SIZE)
 	hashRing := NewHashRing(config.Mirror)
 	for _, node := range config.Nodes {
-		backend := NewStatsDBackend(node.Host, node.Port, node.ManagementPort,
-			config.CheckInterval)
+		if node.Host == "" {
+			node.Host, _ = os.Hostname()
+		}
+
+		backend := NewStatsDBackend(node.Host, node.Port, node.ManagementPort, config.CheckInterval)
 		if DebugMode {
 			log.Printf("Adding backend %s:%d", backend.Host, backend.Port)
 		}
