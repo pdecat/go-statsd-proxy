@@ -15,28 +15,34 @@ const (
 )
 
 type HashRingID uint32
-type HashRing []StatsDBackend
+type HashRing struct {
+	Backends []*StatsDBackend
+	Mirror   bool
+}
 
-func NewHashRing() *HashRing {
-	ret := make(HashRing, 0, MAXRINGSIZE)
+// NewHashRing initializes a hash ring
+func NewHashRing(mirror bool) *HashRing {
+	ret := HashRing{}
+	ret.Backends = make([]*StatsDBackend, 0, MAXRINGSIZE)
+	ret.Mirror = mirror
 	return &ret
 }
 
-// add a new server instance into the hashring
+// Add a new server instance into the hashring
 // accepts an instance of StatsDBackend as parameter
 // returns the sorted hashring with the newly appended server and error
-func (ring *HashRing) Add(backend StatsDBackend) (HashRing, error) {
+func (ring *HashRing) Add(backend *StatsDBackend) error {
 	if !backend.Alive() {
-		err_msg := fmt.Sprintf("Backend %s:%d doesn't seem to be alive.", backend.Host,
+		errMsg := fmt.Sprintf("Backend %s:%d doesn't seem to be alive.", backend.Host,
 			backend.Port)
-		return *ring, errors.New(err_msg)
+		return errors.New(errMsg)
 	}
-	new_ring := append(*ring, backend)
-	sort.Sort(ByHashRingID(new_ring))
-	return new_ring, nil
+	ring.Backends = append(ring.Backends, backend)
+	sort.Sort(ByHashRingID(ring.Backends))
+	return nil
 }
 
-// simple function to get a position in a hashring. The logic is ripped from
+// GetHashRingPosition returns a position in a hashring. The logic is ripped from
 // libketama and uses MD5 to determine the position
 //
 // accepts a string to hash
@@ -64,20 +70,29 @@ func GetHashRingPosition(data string) (HashRingID, error) {
 	return HashRingID(id), nil
 }
 
-// get the StatsDBackend instance that is responsible for a metric.
+// GetBackendsForMetric returns the StatsDBackend instances that are responsible for a metric.
 // Responsible in this case means either the ID of the metric is lower than
 // the Ring ID of the backend. Or the first backend if the metric ID is higher
 // than all backend IDs. This case is the ring wrap around part of the hash
 // ring.
-// accepts a metric name as a string as parameter
-// returns a pointer to a StatsDBackend instance and error
-func (ring *HashRing) GetBackendForMetric(name string) (*StatsDBackend, error) {
-	if len(*ring) == 0 {
-		return nil, errors.New("No backends in the hashring.")
+// If mirroring is enabled, all backend instances are returned, whatever the metric.
+// Accepts a metric name as a string as parameter
+// Returns a list of pointers to StatsDBackend instances and error
+func (ring *HashRing) GetBackendsForMetric(name string) ([]*StatsDBackend, error) {
+	if len(ring.Backends) == 0 {
+		return []*StatsDBackend{}, errors.New("no backends in the hashring")
 	}
-	backend := (*ring)[0]
 
-	metric_id, err := GetHashRingPosition(name)
+	if ring.Mirror {
+		if DebugMode {
+			log.Printf("Mirroring is enabled, returning all backends from %v", *ring)
+		}
+		return ring.Backends, nil
+	}
+
+	backends := []*StatsDBackend{ring.Backends[0]}
+
+	metricID, err := GetHashRingPosition(name)
 	if err != nil {
 		msg := fmt.Sprintf("Unable to get hashring position for %s", name)
 		return nil, errors.New(msg)
@@ -85,23 +100,23 @@ func (ring *HashRing) GetBackendForMetric(name string) (*StatsDBackend, error) {
 	if DebugMode {
 		log.Printf("Choosing backend from %v", *ring)
 	}
-	for _, possible_backend := range *ring {
-		if possible_backend.Alive() && metric_id < possible_backend.RingID {
+	for _, possibleBackend := range ring.Backends {
+		if possibleBackend.Alive() && metricID < possibleBackend.RingID {
 			// we only set the backend if it has a higher RingID and is alive
-			backend = possible_backend
+			backends[0] = possibleBackend
 		}
 
 	}
 	if DebugMode {
-		log.Printf("Backend for %s is %d", name, backend.Port)
+		log.Printf("Backend for %s is %d", name, backends[0].Port)
 	}
 
-	return &backend, nil
+	return backends, nil
 }
 
-// implement the sort interface so StatsDBackend instances are sortable by
+// ByHashRingID implements the sort interface so StatsDBackend instances are sortable by
 // hashring ID
-type ByHashRingID HashRing
+type ByHashRingID []*StatsDBackend
 
 func (a ByHashRingID) Len() int           { return len(a) }
 func (a ByHashRingID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

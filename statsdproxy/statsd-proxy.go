@@ -26,7 +26,7 @@ type StatsDMetric struct {
 	raw   string
 }
 
-// exported functions
+// StartProxy sets up everything
 func StartProxy(cfgFilePath string, quit chan bool) error {
 	var err error
 	config, err := NewConfig(cfgFilePath)
@@ -45,13 +45,11 @@ func StartProxy(cfgFilePath string, quit chan bool) error {
 	<-quit
 
 	return nil
-
 }
 
-// function to set up the main UDP listener. Everything that is needed to
+// StartMainListener sets up the main UDP listener. Everything that is needed to
 // receive and relay metrics
 func StartMainListener(config ProxyConfig) error {
-
 	log.Printf("Starting StatsD listener on %s and port %d", config.Host, config.Port)
 	listener, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(config.Host), Port: config.Port})
 	if err != nil {
@@ -59,26 +57,25 @@ func StartMainListener(config ProxyConfig) error {
 		return nil
 	}
 
-	relay_channel := make(chan StatsDMetric, CHANNEL_SIZE)
-	hash_ring := *NewHashRing()
+	relayChannel := make(chan StatsDMetric, CHANNEL_SIZE)
+	hashRing := NewHashRing(config.Mirror)
 	for _, node := range config.Nodes {
 		backend := NewStatsDBackend(node.Host, node.Port, node.ManagementPort,
 			config.CheckInterval)
 		if DebugMode {
 			log.Printf("Adding backend %s:%d", backend.Host, backend.Port)
 		}
-		hash_ring, err = hash_ring.Add(*backend)
+		err = hashRing.Add(backend)
 		if err != nil {
-			log.Println("Error adding backend to Hashring")
-			log.Println(err)
+			log.Printf("Error adding backend to hash ring: %s", err)
 		}
 	}
-	go relay_metric(hash_ring, relay_channel)
+	go relaymetric(hashRing, relayChannel)
 
-	worker_channel := make(chan []byte)
+	workerChannel := make(chan []byte)
 
 	for x := 0; x < WORKER_COUNT; x++ {
-		go handleConnection(worker_channel, relay_channel)
+		go handleConnection(workerChannel, relayChannel)
 	}
 
 	for {
@@ -87,21 +84,19 @@ func StartMainListener(config ProxyConfig) error {
 		if err != nil {
 			log.Printf("Error reading from UDP buffer: %s (skipping...)", err)
 			return nil
-		} else {
-			worker_channel <- buf[0:num]
 		}
-	}
 
-	return nil
+		workerChannel <- buf[0:num]
+	}
 }
 
-// handle the actual incoming connection and figure out which packet types we
+// handleConnection handles the actual incoming connection and figure out which packet types we
 // got sent.
 // accepts a byte array of data
-func handleConnection(data_channel chan []byte, relay_channel chan StatsDMetric) {
+func handleConnection(dataChannel chan []byte, relayChannel chan StatsDMetric) {
 	for {
 		select {
-		case data := <-data_channel:
+		case data := <-dataChannel:
 			if DebugMode {
 				log.Printf("Got packet: %s", string(data))
 			}
@@ -109,14 +104,14 @@ func handleConnection(data_channel chan []byte, relay_channel chan StatsDMetric)
 			for _, str := range metrics {
 				metric := parsePacketString(str)
 				internalMetrics <- StatsDMetric{name: "packets_received", value: 1}
-				relay_channel <- *metric
+				relayChannel <- *metric
 			}
 
 		}
 	}
 }
 
-// parse a string into a statsd packet
+// parsePacketString parses a string into a statsd packet
 // accepts a string of data
 // returns a StatsDMetric
 func parsePacketString(data string) *StatsDMetric {
@@ -132,35 +127,38 @@ func parsePacketString(data string) *StatsDMetric {
 	value := float64(value64)
 	// check for a samplerate
 	third := strings.Split(second[1], "@")
-	metric_type := third[0]
+	metricType := third[0]
 
-	switch metric_type {
+	switch metricType {
 	case "c", "ms", "g":
 		ret.name = name
 		ret.value = value
 		ret.raw = data
 	default:
-		log.Printf("Unknown metrics type: %s", metric_type)
+		log.Printf("Unknown metrics type: %s", metricType)
 	}
 
 	return ret
 }
 
-// relay a metric to one of the active statsd backends
-func relay_metric(ring HashRing, relay_channel chan StatsDMetric) {
+// relaymetric relays a metric to selected statsd backends
+func relaymetric(ring *HashRing, relayChannel chan StatsDMetric) {
 	for {
 		select {
-		case metric := <-relay_channel:
+		case metric := <-relayChannel:
 			// find out which backend to relay to and do it
-			backend_host, err := ring.GetBackendForMetric(metric.name)
+			backends, err := ring.GetBackendsForMetric(metric.name)
 			if err != nil {
 				log.Printf("Unable to get backend for metric: %s", metric.name)
-			} else {
+				return
+			}
+
+			for _, backend := range backends {
 				if DebugMode {
 					log.Printf("relaying metric: %s to %s:%d", metric.raw,
-						backend_host.Host, backend_host.Port)
+						backend.Host, backend.Port)
 				}
-				backend_host.Send(metric.raw)
+				backend.Send(metric.raw)
 			}
 		}
 	}
