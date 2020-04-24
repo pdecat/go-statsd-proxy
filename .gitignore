@@ -1,2 +1,3 @@
 statsdproxy/statsdproxy.test
 go-statsd-proxy
+config.json
